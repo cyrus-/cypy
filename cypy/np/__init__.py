@@ -29,15 +29,16 @@ class JaggedMatrix(list):
         self.append(self.row_type())
 
     def append_rows(self, n):
-        if n > 0: self.extend(self.row_type() for _ in xrange(n))
+        if n > 0: self.extend(self.row_type() for _ in range(n))
 
 class DirectedAdjacencyMatrix(JaggedMatrix):
     def __init__(self, n_rows=0, dtype=numpy.int32, *args, **kwargs):
         JaggedMatrix.__init__(self, n_rows, *args, **kwargs)
         self.dtype = dtype
 
-    def connect_randomly(self, p, (src_start, src_end)=(0, None),
-                                  (target_start, target_end)=(0, None)):
+    def connect_randomly(self, p, xxx_todo_changeme=(0, None), xxx_todo_changeme1=(0, None)):
+        (src_start, src_end) = xxx_todo_changeme
+        (target_start, target_end) = xxx_todo_changeme1
         rows = len(self)
         if src_end is None: src_end = rows
         if target_end is None: target_end = rows
@@ -51,8 +52,8 @@ class DirectedAdjacencyMatrix(JaggedMatrix):
 
         degree = numpy.random.binomial(target_num, p, src_num)
 
-        for i in py.prog_iter(xrange(src_num)):
-            sample = random.sample(xrange(target_start, target_end), degree[i])
+        for i in py.prog_iter(list(range(src_num))):
+            sample = random.sample(list(range(target_start, target_end)), degree[i])
             py.include_many(self[src_start + i], sample)
 
     @property
@@ -109,4 +110,4 @@ if __name__ == "__main__":
     cm.connect_randomly(pie, rangei, rangee)
     cm.connect_randomly(pii, rangei, rangei)
     packed_cm = cm.packed()
-    print packed_cm
+    print(packed_cm)
