@@ -1342,10 +1342,11 @@ def autoinit(fn):
     #
     # -cyrus
     
-    __init__.__wrapped_init = fn #@UndefinedVariable
-    __init__.__defaults = __defaults #@UndefinedVariable
-    _functools.update_wrapper(__init__, fn) #@UndefinedVariable
-    return __init__ #@UndefinedVariable
+    init = eval('__init__')
+    init.__wrapped_init = fn #@UndefinedVariable
+    init.__defaults = __defaults #@UndefinedVariable
+    _functools.update_wrapper(init, fn) #@UndefinedVariable
+    return init #@UndefinedVariable
 def _empty_init(self): pass
 
 class _new_initializer(object):
