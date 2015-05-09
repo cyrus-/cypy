@@ -4,7 +4,7 @@
 # TODO: automatic documentation generation
 # TODO: move imports to appropriate places in file
 
-import __builtin__
+import builtins
 import sys as _sys
 import time as _time
 import inspect as _inspect
@@ -186,7 +186,7 @@ def tic(msg=None):
     msg: Optionally prints the provided message when called.
     '''
     global ticTime
-    if (msg != None): print msg
+    if (msg != None): print(msg)
     ticTime = _time.time()
 
 def toc():
@@ -200,7 +200,7 @@ def toc():
         
     '''
     elapsed = _time.time() - ticTime
-    print "--> " + str(elapsed) + " s"
+    print(("--> " + str(elapsed) + " s"))
     return elapsed
 
 _prog_iterin_loop = False
@@ -242,7 +242,7 @@ def prog_iter(bounded_iterable, delta=0.01, line_size=50):
                     _sys.stdout.write("\n")
                 _sys.stdout.flush()
             yield item
-        print " (" + str(_time.time() - startTime) + " s)"
+        print((" (" + str(_time.time() - startTime) + " s)"))
         _prog_iterin_loop = False
     else:
         for item in bounded_iterable:
@@ -254,7 +254,7 @@ def prog_xrange(*args, **kwargs):
         prog_iter(xrange(*args), **kwargs)
     
     """
-    return prog_iter(xrange(*args), **kwargs)
+    return prog_iter(list(range(*args)), **kwargs)
 
 ##############################################################################
 ## Collections
@@ -653,7 +653,7 @@ def merge_dicts_into(target, *dicts):
 
 def make_symmetric(dict):
     """Makes the given dictionary symmetric. Values are assumed to be unique."""
-    for key, value in dict.items():
+    for key, value in list(dict.items()):
         dict[value] = key
     return dict
 
@@ -676,7 +676,7 @@ def is_callable(value):
 # even if they don't -- because the normal builtin doesn't actually check that
 # read the __call__ attribute doesn't throw an attribute error the way
 # e.g. hasattr does.
-__builtin__.callable = is_callable
+builtins.callable = is_callable
 
 def get_fn(callable):
     """Returns the underlying function that will be called by the () operator.
@@ -692,13 +692,13 @@ def get_fn(callable):
         return callable
     if _inspect.ismethod(callable):
         try:
-            return callable.im_func
+            return callable.__func__
         except AttributeError:
             return callable.__func__
     if _inspect.isclass(callable):
         return callable.__init__.__func__
     if hasattr(callable, '__call__'):
-        return callable.__call__.im_func
+        return callable.__call__.__func__
     return callable
 
 def get_fn_or_method(callable):
@@ -717,22 +717,22 @@ def get_fn_or_method(callable):
 
 # see http://docs.python.org/reference/datamodel.html
 _fn_args_flag = 0x04
-fn_has_args = lambda callable: bool(get_fn(callable).func_code.co_flags
+fn_has_args = lambda callable: bool(get_fn(callable).__code__.co_flags
                                     & _fn_args_flag)
 """Returns whether the provided callable's underlying function takes *args."""
 
 _fn_kwargs_flag = 0x08
-fn_has_kwargs = lambda callable: bool(get_fn(callable).func_code.co_flags
+fn_has_kwargs = lambda callable: bool(get_fn(callable).__code__.co_flags
                                       & _fn_kwargs_flag)
 """Returns whether the provided callable's underlying function takes **kwargs."""
 
 _fn_generator_flag = 0x20
-fn_is_generator = lambda callable: bool(get_fn(callable).func_code.co_flags
+fn_is_generator = lambda callable: bool(get_fn(callable).__code__.co_flags
                                         & _fn_generator_flag)
 """Returns whether the provided callable's underlying function is a generator."""
 
 _fn_future_division_flag = 0x2000
-fn_uses_future_division = lambda callable: bool(get_fn(callable).func_code.co_flags
+fn_uses_future_division = lambda callable: bool(get_fn(callable).__code__.co_flags
                                                 & _fn_future_division_flag)
 """Returns whether the provided callable's underlying function uses future division."""
 
@@ -748,7 +748,7 @@ def fn_kwargs(callable):
     fn = get_fn(callable)
     (args, _, _, defaults) = _inspect.getargspec(fn)
     if defaults is None: return { }
-    return dict(zip(reversed(args), reversed(defaults)))
+    return dict(list(zip(reversed(args), reversed(defaults))))
 
 def fn_available_argcount(callable):
     """Returns the number of explicit non-keyword arguments that the callable
@@ -761,25 +761,25 @@ def fn_available_argcount(callable):
     """
     fn = get_fn_or_method(callable)
     if _inspect.isfunction(fn):
-        return fn.func_code.co_argcount
+        return fn.__code__.co_argcount
     else: # method
-        if fn.im_self is None:
-            return fn.im_func.func_code.co_argcount
+        if fn.__self__ is None:
+            return fn.__func__.__code__.co_argcount
         else:
-            return fn.im_func.func_code.co_argcount - 1
+            return fn.__func__.__code__.co_argcount - 1
 
 def fn_minimum_argcount(callable):
     """Returns the minimum number of arguments that must be provided for the call to succeed."""
     fn = get_fn(callable)
     available_argcount = fn_available_argcount(callable)
     try:
-        return available_argcount - len(fn.func_defaults)
+        return available_argcount - len(fn.__defaults__)
     except TypeError:
         return available_argcount
     
 def fn_argnames(callable):
     fn = get_fn(callable)
-    func_code = fn.func_code
+    func_code = fn.__code__
     argcount = func_code.co_argcount
     if fn_has_args(fn):
         argcount += 1
@@ -833,7 +833,7 @@ def fn_arg_hash_function(fn):
     has_args = fn_has_args(fn)
     has_kwargs = fn_has_kwargs(fn)
     default_kwargs = fn_kwargs(fn)
-    for name, value in default_kwargs.iteritems():  
+    for name, value in list(default_kwargs.items()):  
         # store only hashes of values to prevent memory leaks
         try: default_kwargs[name] = hash(value)
         except TypeError: default_kwargs[name] = _unhashable_object
@@ -874,7 +874,7 @@ def fn_arg_hash_function(fn):
         # technically they aren't... be wary if you define **kwargs and then
         # depend on its mutable characteristics.
         if has_kwargs:
-            items = frozenset(item for item in kwargs.items()
+            items = frozenset(item for item in list(kwargs.items())
                               if item[0] not in explicit_kwarg_args)
             #print items, 'is **kwargs items'
             yield hash(items)
@@ -912,7 +912,7 @@ def decorator(d):
 
     See examples below.
     """
-    defaults = d.func_defaults
+    defaults = d.__defaults__
     if defaults and defaults[0] is None:
         # Can be applied as @decorator or @decorator(kwargs) because
         # first argument is None
@@ -1032,7 +1032,7 @@ def define_properties(obj, props):
         '__doc__': cls.__doc__
     }
 
-    for name, defn in props.iteritems():
+    for name, defn in list(props.items()):
         if is_callable(defn):
             defn = property(defn)
         elif not hasattr(defn, '__get__'):
@@ -1251,7 +1251,7 @@ def autoinit(fn):
     __defaults = fn_kwargs(fn)
 
     avail_ac = fn_available_argcount(fn)
-    avail_args = list(fn.func_code.co_varnames[1:avail_ac])
+    avail_args = list(fn.__code__.co_varnames[1:avail_ac])
 
     signature = fn_signature(fn,
         argument_transform=(lambda name: name),
@@ -1330,7 +1330,7 @@ def autoinit(fn):
         else:
             setattr(self, __name, __val)
 ''' % locals()
-    exec code in globals(), locals()
+    exec(code, globals(), locals())
     #
     # i know, exec -- no other way to get the signature to match it seems
     # unless i build it out of an abstract syntax tree or something, which 
@@ -1342,10 +1342,11 @@ def autoinit(fn):
     #
     # -cyrus
     
-    __init__.__wrapped_init = fn #@UndefinedVariable
-    __init__.__defaults = __defaults #@UndefinedVariable
-    _functools.update_wrapper(__init__, fn) #@UndefinedVariable
-    return __init__ #@UndefinedVariable
+    init = eval('__init__')
+    init.__wrapped_init = fn #@UndefinedVariable
+    init.__defaults = __defaults #@UndefinedVariable
+    _functools.update_wrapper(init, fn) #@UndefinedVariable
+    return init #@UndefinedVariable
 def _empty_init(self): pass
 
 class _new_initializer(object):
@@ -1366,7 +1367,7 @@ class _new(object):
 
     def __getitem__(self, cls):
         _defaults = self._defaults
-        if _defaults.has_key(cls):
+        if cls in _defaults:
             return _defaults[cls]
         else:
             default = _new_initializer(cls)
@@ -1486,10 +1487,10 @@ class intern(object):
         
         __init__ = cls_.__init__
         try:
-            __init__.im_func.__hash_function
+            __init__.__func__.__hash_function
         except AttributeError:
             try:
-                __init__.im_func.__hash_function = \
+                __init__.__func__.__hash_function = \
                         fn_arg_hash_function(__init__)
             except (AttributeError, TypeError): pass
             
@@ -1500,10 +1501,10 @@ class intern(object):
             # check cache
             __init__ = cls.__init__
             try:
-                hash_function = __init__.im_func.__hash_function
+                hash_function = __init__.__func__.__hash_function
             except AttributeError:
                 try:
-                    hash_function = __init__.im_func.__hash_function = \
+                    hash_function = __init__.__func__.__hash_function = \
                                   fn_arg_hash_function(__init__)
                 except (AttributeError, TypeError):
                     hash_function = generic_arg_hash_function
@@ -1581,15 +1582,15 @@ def string_escape(string, delimiter='"'):
     Example:
     >>> string_escape("a line\t")
     "a line\\t"
-    >>> string_escape(u"some fancy character: \u9999")
+    >>> string_escape(u"some fancy character: \\u9999")
     u"\\u9999"
     >>> string_escape(5)
     None
     """
     if isinstance(string, str):
         escaped = string.encode("string-escape")
-    elif isinstance(string, unicode):
-        escaped = unicode(string.encode("unicode-escape"))
+    elif isinstance(string, str):
+        escaped = str(string.encode("unicode-escape"))
     else:
         raise Error("Unexpected string type.")
     return delimiter + escape_quotes(escaped, delimiter) + delimiter
@@ -1597,8 +1598,8 @@ def string_escape(string, delimiter='"'):
 def escape_quotes(string, quote_type='"'):
     if isinstance(string, str):
         return string.replace(quote_type, "\\" + quote_type)
-    elif isinstance(string, unicode):
-        return string.replace(quote_type, unicode("\\") + quote_type)
+    elif isinstance(string, str):
+        return string.replace(quote_type, str("\\") + quote_type)
     else:
         raise Error("Unexpected string type.")
     
@@ -1770,7 +1771,7 @@ class frozendict(dict):
         pass
     
     def __hash__(self):
-        return hash(frozenset(self.iteritems()))
+        return hash(frozenset(iter(list(self.items()))))
 
     def __repr__(self):
         return "frozendict(%s)" % dict.__repr__(self)
@@ -1901,7 +1902,7 @@ class stack_lookup(object):
 ## {{{ http://code.activestate.com/recipes/576694/ (r7)
 import collections
 
-KEY, PREV, NEXT = range(3)
+KEY, PREV, NEXT = list(range(3))
 
 class OrderedSet(collections.MutableSet):
 
@@ -2021,7 +2022,7 @@ class OrderedDict(dict, MutableMapping):
     items = MutableMapping.items
 
     def __repr__(self):
-        pairs = ', '.join(map('%r: %r'.__mod__, self.items()))
+        pairs = ', '.join(map('%r: %r'.__mod__, list(self.items())))
         return '%s({%s})' % (self.__class__.__name__, pairs)
 
     def copy(self):

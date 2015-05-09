@@ -23,14 +23,14 @@ def copy_node(node, *args, **kwargs):
     return copy_node_into(node, new_node, *args, **kwargs)
         
 def copy_node_into(node, new_node, *args, **kwargs):
-    for name, value in node.__dict__.iteritems():
+    for name, value in list(node.__dict__.items()):
         setattr(new_node, name, value)            
     
     cls = node.__class__
     for name, value in zip(cls._fields, args):
         setattr(new_node, name, value)
         
-    for name, value in kwargs.iteritems():
+    for name, value in list(kwargs.items()):
         setattr(new_node, name, value)
         
     return new_node
@@ -41,7 +41,7 @@ def deep_copy_node(node, *args, **kwargs):
     return deep_copy_node_into(node, new_node, *args, **kwargs)
 
 def deep_copy_node_into(node, new_node, *args, **kwargs):
-    for name, value in node.__dict__.iteritems():
+    for name, value in list(node.__dict__.items()):
         if isinstance(value, _ast.AST):
             value = deep_copy_node(value)
         setattr(new_node, name, value)
@@ -50,7 +50,7 @@ def deep_copy_node_into(node, new_node, *args, **kwargs):
     for name, value in zip(cls._fields, args):
         setattr(new_node, name, value)
         
-    for name, value in kwargs.iteritems():
+    for name, value in list(kwargs.items()):
         setattr(new_node, name, value)
         
     return new_node
@@ -71,7 +71,7 @@ def infer_ast(src):
     """
     if isinstance(src, _ast.AST):
         return src
-    elif isinstance(src, basestring):
+    elif isinstance(src, str):
         return _ast.parse(src)
     else:
         # if a function instance is passed in, it's source is found

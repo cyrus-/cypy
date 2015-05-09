@@ -60,7 +60,7 @@ class CG(object):
         if pop_next:
             self._pop_next = False
 
-        if isinstance(code, basestring):
+        if isinstance(code, str):
             # Strings are processed, then indented appropriately
             for token in self._process(code):
                 prev = self.last_string
@@ -137,7 +137,7 @@ class CG(object):
 
     def lines(self, code):
         """Fixes indentation for multiline strings before appending."""
-        if isinstance(code, basestring):
+        if isinstance(code, str):
             fix_indentation = self.fix_indentation
             if fix_indentation:
                 code = fix_indentation(code)
@@ -375,7 +375,7 @@ class IdentifierProcessor(object):
                 except KeyError:
                     yield token
                 else:
-                    if recursive and isinstance(substitution, basestring):
+                    if recursive and isinstance(substitution, str):
                         for final in self(substitution):
                             yield final
                     elif substitution is not None:
