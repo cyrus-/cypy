@@ -4,7 +4,10 @@
 # TODO: automatic documentation generation
 # TODO: move imports to appropriate places in file
 
-import builtins
+try:
+    import builtins
+except:
+    import __builtin__ as builtins
 import sys as _sys
 import time as _time
 import inspect as _inspect
