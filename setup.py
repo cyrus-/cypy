@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
 	name='cypy',
-	version='0.1.0',
+	version='0.2.0',
 	author='Cyrus Omar',
 	author_email='cyrus.omar@gmail.com',
         packages=['cypy', 'cypy.np'],
