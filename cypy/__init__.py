@@ -1907,7 +1907,7 @@ import collections
 
 KEY, PREV, NEXT = list(range(3))
 
-class OrderedSet(collections.MutableSet):
+class OrderedSet(collections.abc.MutableSet):
 
     def __init__(self, iterable=None):
         self.end = end = [] 
@@ -1970,7 +1970,7 @@ class OrderedSet(collections.MutableSet):
         self.clear()                    # remove circular references
 # END {{{ http://code.activestate.com/recipes/576694/ (r7)
 
-from collections import MutableMapping
+from collections.abc import MutableMapping
 
 class OrderedDict(dict, MutableMapping):
 
